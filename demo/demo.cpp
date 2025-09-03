@@ -39,13 +39,14 @@ int main(int argc, char** argv) {
                          gdsb::MatrixMarketUndirectedUnweightedNoLoopStatic>(bio_celegans_input,
                                                                              std::move(emplace));
 
-    dhb::Matrix<sr::Weight> m(vertex_count);
+    dhb::Matrix<sr::Weight> graph(vertex_count);
     for (auto e : edges) {
-        m.insert(e.source, e.target.vertex, e.target.data.weight);
+        graph.insert(e.source, e.target.vertex, e.target.data.weight);
     }
 
     std::cout << "Graph path: " << graph_path << std::endl;
-    std::cout << "Graph n: " << m.vertices_count() << ", m: " << m.edges_count() << std::endl;
+    std::cout << "Graph n: " << graph.vertices_count() << ", m: " << graph.edges_count()
+              << std::endl;
 
     constexpr size_t length = 10;
     constexpr dhb::Vertex start_vertex = 1;
@@ -61,17 +62,17 @@ int main(int argc, char** argv) {
     auto step_f = [&](dhb::Matrix<sr::Weight>::ConstNeighborView n,
                       std::optional<dhb::Vertex> previous_vertex) -> std::optional<dhb::Vertex> {
         auto chosen_vertex = sr::node2vec::unweighted::step_rejection_sampling(
-            m, n, previous_vertex, n2v_parameter, sr::node2vec::max_alpha(n2v_parameter),
+            graph, n, previous_vertex, n2v_parameter, sr::node2vec::max_alpha(n2v_parameter),
             rngs[omp_get_thread_num()].i_rng, rngs[omp_get_thread_num()].f_rng);
 
         return chosen_vertex;
     };
 
     auto node2vec_rw = [&](dhb::Vertex const u, sr::RandomNumberGenPack&) {
-        return sr::second_order(std::move(step_f), m, u, length);
+        return sr::second_order(std::move(step_f), graph, u, length);
     };
 
-    auto start_vertex_f = [&](size_t const walk_id) { return walk_id % m.vertices_count(); };
+    auto start_vertex_f = [&](size_t const walk_id) { return walk_id % graph.vertices_count(); };
 
     constexpr size_t rw_count = 4000000u;
 
