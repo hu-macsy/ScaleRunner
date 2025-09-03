@@ -1,4 +1,3 @@
-
 #include <scalerunner/node2vec.h>
 #include <scalerunner/rw_scheduler.h>
 #include <scalerunner/second_order_rw.h>
@@ -60,9 +59,9 @@ int main(int argc, char** argv) {
     std::vector<sr::RandomNumberGenPack> rngs(omp_get_max_threads());
 
     auto step_f = [&](dhb::Matrix<sr::Weight>::ConstNeighborView n,
-                      std::optional<dhb::Vertex> last_vertex) -> std::optional<dhb::Vertex> {
+                      std::optional<dhb::Vertex> previous_vertex) -> std::optional<dhb::Vertex> {
         auto chosen_vertex = sr::node2vec::unweighted::step_rejection_sampling(
-            m, n, last_vertex, n2v_parameter, sr::node2vec::max_alpha(n2v_parameter),
+            m, n, previous_vertex, n2v_parameter, sr::node2vec::max_alpha(n2v_parameter),
             rngs[omp_get_thread_num()].i_rng, rngs[omp_get_thread_num()].f_rng);
 
         return chosen_vertex;
